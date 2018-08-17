@@ -11,14 +11,31 @@ radio = RF24(22, 0);
 pipes = [0x314e6f6465]
 payload_size = 32
 millis = lambda: int(round(time.time() * 1000))
+lastMeasurement = {}
+
  
 radio.begin()
  
 radio.openWritingPipe(pipes[0])
 radio.openReadingPipe(1,pipes[0])
 
+def getNodeID(message):
+	return message.split(':')[0].decode("utf-8") 
+
+def getType(message):
+	return chr(message.split(':')[1][0])
+
+def getValue(message):
+	return message.split(":")[1][1:].decode("utf-8").rstrip(' \t\r\n\0')
+
 def handleMessage(message):
-	print(message)
+	nodeID = getNodeID(message)
+	measurementType = getType(message)
+	measurementValue = getValue(message)
+	if not (nodeID in lastMeasurement):
+		lastMeasurement[nodeID] = {}
+	
+	lastMeasurement[nodeID][measurementType] = (measurementValue, millis())
  
 if __name__ == "__main__":
 
@@ -41,4 +58,5 @@ if __name__ == "__main__":
 	        len = radio.getDynamicPayloadSize()
         	receive_payload = radio.read(len)
 		handleMessage(receive_payload)
+		print(lastMeasurement)
 
