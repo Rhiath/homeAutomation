@@ -46,6 +46,13 @@ def handleMessage(message):
 	nodeID = getNodeID(message)
 	measurementType = getType(message)
 	measurementValue = getValue(message)
+
+	if ( measurementType == "T" ):
+		measurementValue = measurementValue + u" \u00b0C"
+	if ( measurementType == "H" ):
+		measurementValue = measurementValue + "% RH"
+
+
 	if not (nodeID in lastMeasurement):
 		lastMeasurement[nodeID] = {}
 	
