@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #from __future__ import print_function
 import time
+import datetime
 import sys
 from RF24 import *
 import RPi.GPIO as GPIO
@@ -56,7 +57,8 @@ def handleMessage(message):
 	if not (nodeID in lastMeasurement):
 		lastMeasurement[nodeID] = {}
 	
-	lastMeasurement[nodeID][measurementType] = (measurementValue, millis())
+	formattedTimestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%dT%H:%M:%S')
+	lastMeasurement[nodeID][measurementType] = (measurementValue, formattedTimestamp)
 
 def startRESTService():
     app.run(port='5002', host= '0.0.0.0')
