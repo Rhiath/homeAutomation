@@ -4,6 +4,11 @@ import time
 import sys
 from RF24 import *
 import RPi.GPIO as GPIO
+from flask import Flask, request
+from flask_restful import Api, Resource
+from json import dumps
+#from flask.ext.jsonpify import jsonify
+import threading
  
 # RPi Alternate, with SPIDEV - Note: Edit RF24/arch/BBB/spi.cpp and  set 'this->device = "/dev/spidev0.0";;' or as listed in /dev
 radio = RF24(22, 0);
@@ -13,7 +18,16 @@ payload_size = 32
 millis = lambda: int(round(time.time() * 1000))
 lastMeasurement = {}
 
- 
+app = Flask(__name__)
+api = Api(app)
+
+class Sensors(Resource):
+    def get(self):
+        return lastMeasurement
+
+
+api.add_resource(Sensors, '/sensors')
+
 radio.begin()
  
 radio.openWritingPipe(pipes[0])
@@ -36,8 +50,16 @@ def handleMessage(message):
 		lastMeasurement[nodeID] = {}
 	
 	lastMeasurement[nodeID][measurementType] = (measurementValue, millis())
+
+def startRESTService():
+    app.run(port='5002', host= '0.0.0.0')
  
 if __name__ == "__main__":
+    thread = threading.Thread(target=startRESTService)
+    thread.daemon = True
+    thread.start()
+    print("started REST service")
+
 
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BCM)
