@@ -77,6 +77,13 @@ def getDomainSensorValue(deviceType, sensorType, value):
 	if (deviceType == "HM-Sec-SC-2" and sensorType == "STATE"):
 		if ( value == "true"): value = "OPEN"
 		if ( value == "false"): value = "CLOSED"
+
+	if (deviceType == "HM-Sec-RHS" and sensorType == "STATE"):
+		if ( value == "0"): value = "LOCK"
+		if ( value == "1"): value = "TILT"
+		if ( value == "2"): value = "UNLOCK"
+
+
 	return value;
 
 def grabCC2():
