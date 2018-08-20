@@ -10,6 +10,9 @@ from flask_restful import Api, Resource
 from json import dumps
 #from flask.ext.jsonpify import jsonify
 import threading
+import urllib
+from xml.dom.minidom import parse
+import xml.dom.minidom
  
 # RPi Alternate, with SPIDEV - Note: Edit RF24/arch/BBB/spi.cpp and  set 'this->device = "/dev/spidev0.0";;' or as listed in /dev
 radio = RF24(22, 0);
@@ -43,6 +46,14 @@ def getType(message):
 def getValue(message):
 	return message.split(":")[1][1:].decode("utf-8").rstrip(' \t\r\n\0')
 
+def recordSensorMeasurement(nodeID, measurementType, measurementValue):
+	if not (nodeID in lastMeasurement):
+		lastMeasurement[nodeID] = {}
+	
+	formattedTimestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%dT%H:%M:%S')
+	lastMeasurement[nodeID][measurementType] = (measurementValue, formattedTimestamp)
+
+
 def handleMessage(message):
 	nodeID = getNodeID(message)
 	measurementType = getType(message)
@@ -53,12 +64,31 @@ def handleMessage(message):
 	if ( measurementType == "H" ):
 		measurementValue = measurementValue + "% RH"
 
+	recordSensorMeasurement(nodeID, measurementType, measurementValue)	
 
-	if not (nodeID in lastMeasurement):
-		lastMeasurement[nodeID] = {}
-	
-	formattedTimestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%dT%H:%M:%S')
-	lastMeasurement[nodeID][measurementType] = (measurementValue, formattedTimestamp)
+
+def grabCC2():
+#	first = urllib.urlopen("http://homematic-cc2/config/xmlapi/devicelist.cgi").read()
+	second = urllib.urlopen("http://homematic-cc2/config/xmlapi/statelist.cgi").read()
+
+#	devices = xml.dom.minidom.parseString(first)
+	states = xml.dom.minidom.parseString(second)
+
+	print("parsing done")
+#	print(devices)
+	print(states)	
+	for device in states.childNodes[0].childNodes:
+		deviceName = device.getAttribute("name")
+		for channel in device.childNodes:
+			for datapoint in channel.childNodes:
+				type = datapoint.getAttribute("type")
+				value = datapoint.getAttribute("value")
+				recordSensorMeasurement(deviceName,type, value)
+
+def keepGrabbingCC2():
+	while(True):
+		time.sleep(5.0)
+		grabCC2()
 
 def startRESTService():
     app.run(port='5002', host= '0.0.0.0')
@@ -68,6 +98,11 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
     print("started REST service")
+
+    thread2 = threading.Thread(target=keepGrabbingCC2)
+    thread2.daemon = True
+    thread2.start()
+    print("started CC2 grabber")
 
 
     GPIO.setwarnings(False)
