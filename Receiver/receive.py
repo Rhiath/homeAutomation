@@ -92,7 +92,12 @@ def grabCC2():
 			for datapoint in channel.childNodes:
 				type = datapoint.getAttribute("type")
 				value = datapoint.getAttribute("value")
+
+				if (deviceType == "HM-Sec-SC-2" and type == "STATE"):
+					if ( value == "true"): value = "OPEN"
+					if ( value == "false"): value = "CLOSED"
 				values[type] = value
+
 		recordSensorMeasurement(deviceName,deviceType, values)
 
 def keepGrabbingCC2():
