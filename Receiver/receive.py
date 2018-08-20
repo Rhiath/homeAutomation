@@ -73,6 +73,12 @@ def getDeviceType(devices, deviceName):
 			return device.getAttribute("device_type")
 	return "unknown";
 
+def getDomainSensorValue(deviceType, sensorType, value):
+	if (deviceType == "HM-Sec-SC-2" and sensorType == "STATE"):
+		if ( value == "true"): value = "OPEN"
+		if ( value == "false"): value = "CLOSED"
+	return value;
+
 def grabCC2():
 	first = urllib.urlopen("http://homematic-cc2/config/xmlapi/devicelist.cgi").read()
 	second = urllib.urlopen("http://homematic-cc2/config/xmlapi/statelist.cgi").read()
@@ -92,10 +98,8 @@ def grabCC2():
 			for datapoint in channel.childNodes:
 				type = datapoint.getAttribute("type")
 				value = datapoint.getAttribute("value")
+				value = getDomainSensorValue(deviceType, type, value)
 
-				if (deviceType == "HM-Sec-SC-2" and type == "STATE"):
-					if ( value == "true"): value = "OPEN"
-					if ( value == "false"): value = "CLOSED"
 				values[type] = value
 
 		recordSensorMeasurement(deviceName,deviceType, values)
