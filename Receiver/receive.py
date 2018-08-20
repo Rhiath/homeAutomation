@@ -66,29 +66,39 @@ def handleMessage(message):
 
 	recordSensorMeasurement(nodeID, measurementType, measurementValue)	
 
+def getDeviceType(devices, deviceName):	
+	for device in devices.childNodes[0].childNodes :
+#		print(device.getAttribute("name")+" vs. "+deviceName)
+		if (device.getAttribute("name") == deviceName ):
+			return device.getAttribute("device_type")
+	return "unknown";
 
 def grabCC2():
-#	first = urllib.urlopen("http://homematic-cc2/config/xmlapi/devicelist.cgi").read()
+	first = urllib.urlopen("http://homematic-cc2/config/xmlapi/devicelist.cgi").read()
 	second = urllib.urlopen("http://homematic-cc2/config/xmlapi/statelist.cgi").read()
 
-#	devices = xml.dom.minidom.parseString(first)
+	devices = xml.dom.minidom.parseString(first)
 	states = xml.dom.minidom.parseString(second)
 
 	print("parsing done")
 #	print(devices)
-	print(states)	
+#	print(states)	
 	for device in states.childNodes[0].childNodes:
 		deviceName = device.getAttribute("name")
+		deviceType = getDeviceType(devices, deviceName)
+		values = {}
+
 		for channel in device.childNodes:
 			for datapoint in channel.childNodes:
 				type = datapoint.getAttribute("type")
 				value = datapoint.getAttribute("value")
-				recordSensorMeasurement(deviceName,type, value)
+				values[type] = value
+		recordSensorMeasurement(deviceName,deviceType, values)
 
 def keepGrabbingCC2():
 	while(True):
-		time.sleep(5.0)
 		grabCC2()
+		time.sleep(5.0)
 
 def startRESTService():
     app.run(port='5002', host= '0.0.0.0')
