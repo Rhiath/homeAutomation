@@ -5,7 +5,7 @@ import datetime
 import sys
 from RF24 import *
 import RPi.GPIO as GPIO
-from flask import Flask, request
+from flask import Flask, request, make_response
 from flask_restful import Api, Resource
 from json import dumps
 #from flask.ext.jsonpify import jsonify
@@ -29,8 +29,49 @@ class Sensors(Resource):
     def get(self):
         return lastMeasurement
 
+class Status(Resource):
+    @staticmethod
+    def getChildren(element, name):
+	retValue = []
+	for child in element.childNodes:
+		if ( child.nodeName == name ):
+			retValue.append(child)
+	return retValue
+
+    @staticmethod
+    def renderSensors(element):
+	retValue = "";
+	for sensor in Status.getChildren(element, "sensor"):
+		retValue = retValue + "Sensor: "+ sensor.getAttribute("name") + "<br />"
+	return retValue
+
+    @staticmethod
+    def renderRoom(room):
+	retValue = "";
+	retValue = retValue + "<h2>" + room.getAttribute("name") + "</h2>"
+	retValue = retValue + Status.renderSensors(room)
+	for door in Status.getChildren(room, "door"):
+		retValue = retValue + "<h3>door</h3>" + Status.renderSensors(door)
+	for window in Status.getChildren(room, "window"):
+		retValue = retValue + "<h3>window</h3>"+ Status.renderSensors(window)
+	return retValue
+
+    def get(self):
+        retValue = "<html><body>"
+	
+	building = xml.dom.minidom.parse("building.xml")
+	for floor in Status.getChildren(building.childNodes[0],"floor"):
+		retValue = retValue + "<h1>" + floor.getAttribute("name") + "</h1>"
+		for hallway in Status.getChildren(floor, "hallway"):
+			retValue = retValue + Status.renderSensors(hallway)
+		for room in Status.getChildren(floor, "room"):
+			retValue = retValue + Status.renderRoom(room)
+
+	retValue = retValue + "</body></html>"
+	return make_response(retValue, 200)
 
 api.add_resource(Sensors, '/sensors')
+api.add_resource(Status, '/status')
 
 radio.begin()
  
