@@ -86,7 +86,7 @@ class Status(Resource):
 	return "<h3>window "+element.getAttribute("name")+"</h3>" + Status.renderSensors(element)
 
     def get(self):
-        retValue = "<html><body>"
+        retValue = "<html><head><meta http-equiv=\"refresh\" content=\"5\"></head><body>"
 	
 	building = xml.dom.minidom.parse("building.xml")
 	for floor in Status.getChildren(building.childNodes[0],"floor"):
