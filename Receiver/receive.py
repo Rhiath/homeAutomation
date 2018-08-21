@@ -55,6 +55,15 @@ class Status(Resource):
 		sensorType = next(iter(sensor))
 		retValue = sensor[sensorType][0]["STATE"]
 
+	if ( retValue == "OPEN" or retValue == "UNLOCK" ):
+		retValue = "<font color=\"red\">"+retValue+"</font>"
+
+	if ( retValue == "TILT" ):
+		retValue = "<font color=\"GoldenRod\">"+retValue+"</font>"
+
+	if ( retValue == "CLOSED" or retValue == "LOCK" ):
+		retValue = "<font color=\"green\">"+retValue+"</font>"
+
 	return retValue;
 
     @staticmethod
@@ -155,7 +164,6 @@ def grabCC2():
 	devices = xml.dom.minidom.parseString(first)
 	states = xml.dom.minidom.parseString(second)
 
-	print("parsing done")
 #	print(devices)
 #	print(states)	
 	for device in states.childNodes[0].childNodes:
@@ -176,6 +184,7 @@ def grabCC2():
 def keepGrabbingCC2():
 	while(True):
 		grabCC2()
+		print("pulled data from CC2")
 		time.sleep(5.0)
 
 def startRESTService():
