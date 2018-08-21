@@ -42,8 +42,20 @@ class Status(Resource):
     def renderSensors(element):
 	retValue = "";
 	for sensor in Status.getChildren(element, "sensor"):
-		retValue = retValue + "Sensor: "+ sensor.getAttribute("name") + "<br />"
+		retValue = retValue + "Sensor: "+ sensor.getAttribute("name")+" = "
+		retValue = retValue + Status.renderSensorValue(sensor) +"<br />"
 	return retValue
+
+    @staticmethod
+    def renderSensorValue(element):
+	name = element.getAttribute("name")
+	retValue = "unknown"
+	if ( name in lastMeasurement):
+		sensor = lastMeasurement[name]
+		sensorType = next(iter(sensor))
+		retValue = sensor[sensorType][0]["STATE"]
+
+	return retValue;
 
     @staticmethod
     def renderRoom(room):
@@ -51,10 +63,18 @@ class Status(Resource):
 	retValue = retValue + "<h2>" + room.getAttribute("name") + "</h2>"
 	retValue = retValue + Status.renderSensors(room)
 	for door in Status.getChildren(room, "door"):
-		retValue = retValue + "<h3>door</h3>" + Status.renderSensors(door)
+		retValue = retValue + Status.renderDoor(door)
 	for window in Status.getChildren(room, "window"):
-		retValue = retValue + "<h3>window</h3>"+ Status.renderSensors(window)
+		retValue = retValue + Status.renderWindow(window)
 	return retValue
+
+    @staticmethod
+    def renderDoor(element):
+	return "<h3>door "+element.getAttribute("name")+"</h3>" + Status.renderSensors(element)
+
+    @staticmethod
+    def renderWindow(element):
+	return "<h3>window "+element.getAttribute("name")+"</h3>" + Status.renderSensors(element)
 
     def get(self):
         retValue = "<html><body>"
@@ -63,7 +83,8 @@ class Status(Resource):
 	for floor in Status.getChildren(building.childNodes[0],"floor"):
 		retValue = retValue + "<h1>" + floor.getAttribute("name") + "</h1>"
 		for hallway in Status.getChildren(floor, "hallway"):
-			retValue = retValue + Status.renderSensors(hallway)
+			for door in Status.getChildren(hallway, "door"):
+				retValue = retValue + Status.renderDoor(door)
 		for room in Status.getChildren(floor, "room"):
 			retValue = retValue + Status.renderRoom(room)
 
