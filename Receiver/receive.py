@@ -13,6 +13,7 @@ import threading
 import urllib
 from xml.dom.minidom import parse
 import xml.dom.minidom
+import sensors
  
 # RPi Alternate, with SPIDEV - Note: Edit RF24/arch/BBB/spi.cpp and  set 'this->device = "/dev/spidev0.0";;' or as listed in /dev
 radio = RF24(22, 0);
@@ -41,10 +42,14 @@ class Status(Resource):
     @staticmethod
     def renderSensors(element):
 	retValue = "";
+	values = []
 	for sensor in Status.getChildren(element, "sensor"):
-		retValue = retValue + "Sensor: "+ sensor.getAttribute("name")+" = "
-		retValue = retValue + Status.renderSensorValue(sensor) +"<br />"
-	return retValue
+		name = sensor.getAttribute("name")
+		value = Status.renderSensorValue(sensor)
+		sens = sensors.Sensor(value)
+		values.append(sens)
+	multi = sensors.MultiSensor(values)
+	return multi.toHTML()
 
     @staticmethod
     def renderSensorValue(element):
@@ -79,11 +84,12 @@ class Status(Resource):
 
     @staticmethod
     def renderDoor(element):
-	return "<h3>door "+element.getAttribute("name")+"</h3>" + Status.renderSensors(element)
+	return "<h3>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</h3>"
 
     @staticmethod
     def renderWindow(element):
-	return "<h3>window "+element.getAttribute("name")+"</h3>" + Status.renderSensors(element)
+	return "<h3>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</h3>"
+
 
     def get(self):
         retValue = "<html><head><meta http-equiv=\"refresh\" content=\"5\"></head><body>"
