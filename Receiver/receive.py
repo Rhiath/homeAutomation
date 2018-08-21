@@ -84,11 +84,11 @@ class Status(Resource):
 
     @staticmethod
     def renderDoor(element):
-	return "<h3>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</h3>"
+	return "<b>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</b><br />"
 
     @staticmethod
     def renderWindow(element):
-	return "<h3>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</h3>"
+	return "<b>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</b><br />"
 
 
     def get(self):
