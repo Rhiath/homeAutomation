@@ -14,6 +14,7 @@ import urllib
 from xml.dom.minidom import parse
 import xml.dom.minidom
 import sensors
+import building
  
 # RPi Alternate, with SPIDEV - Note: Edit RF24/arch/BBB/spi.cpp and  set 'this->device = "/dev/spidev0.0";;' or as listed in /dev
 radio = RF24(22, 0);
@@ -94,6 +95,7 @@ class Status(Resource):
     def get(self):
         retValue = "<html><head><meta http-equiv=\"refresh\" content=\"5\"></head><body>"
 	
+
 	building = xml.dom.minidom.parse("building.xml")
 	for floor in Status.getChildren(building.childNodes[0],"floor"):
 		retValue = retValue + "<h1>" + floor.getAttribute("name") + "</h1>"
@@ -117,11 +119,11 @@ radio.openReadingPipe(1,pipes[0])
 def getNodeID(message):
 	return message.split(':')[0].decode("utf-8") 
 
-def getType(message):
-	return chr(message.split(':')[1][0])
+def getTemperature(message):
+	return message.split(":")[2].decode("utf-8").rstrip(' \t\r\n\0')
 
-def getValue(message):
-	return message.split(":")[1][1:].decode("utf-8").rstrip(' \t\r\n\0')
+def getHumidity(message):
+	return message.split(":")[1].decode("utf-8").rstrip(' \t\r\n\0')
 
 def recordSensorMeasurement(nodeID, measurementType, measurementValue):
 	if not (nodeID in lastMeasurement):
@@ -133,15 +135,14 @@ def recordSensorMeasurement(nodeID, measurementType, measurementValue):
 
 def handleMessage(message):
 	nodeID = getNodeID(message)
-	measurementType = getType(message)
-	measurementValue = getValue(message)
+	humidity = getHumidity(message)
+	temperature = getTemperature(message)
 
-	if ( measurementType == "T" ):
-		measurementValue = measurementValue + u" \u00b0C"
-	if ( measurementType == "H" ):
-		measurementValue = measurementValue + "% RH"
-
-	recordSensorMeasurement(nodeID, measurementType, measurementValue)	
+#	print(nodeID+" --> "+humidity+" RH, "+temperature+" C")
+	values = {}
+	values["T"] = temperature
+	values["H"] = humidity
+	recordSensorMeasurement(nodeID, "DHT22", values)	
 
 def getDeviceType(devices, deviceName):	
 	for device in devices.childNodes[0].childNodes :
@@ -227,5 +228,4 @@ if __name__ == "__main__":
 	        len = radio.getDynamicPayloadSize()
         	receive_payload = radio.read(len)
 		handleMessage(receive_payload)
-		print(lastMeasurement)
 
