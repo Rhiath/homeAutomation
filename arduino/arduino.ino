@@ -1,3 +1,8 @@
+#include <Adafruit_Sensor.h>
+
+#include <DHT_U.h>
+#include <DHT.h>
+
 #include <SPI.h>
 
 #include <RF24_config.h>
@@ -7,9 +12,11 @@
 #define SIGRD 5
 #include <avr/boot.h>
 
+
 RF24 radio (9,10);
 byte buffer[128];
 byte serial[10];
+DHT dht(2, DHT22);
 
 uint64_t addresses[]= {0x314e6f6465};
 int nodeID;
@@ -94,21 +101,31 @@ int timeoutValue = 200;
 
 void emitMessage() {
   radio.stopListening();
- emit("T", 100);
- emit("H", 23);
+
+ float hum = dht.readHumidity();
+ float temp = dht.readTemperature();
+Serial.print(temp);Serial.println(" C");
+Serial.print(hum);Serial.println("% RH");
+ emit(hum,temp);
+// emit("T", 100);
+// emit("H", 23);
     radio.startListening();
 
 }
 
-void emit(String type, int value) {
+void emit(float humidity, float temperature) {
  Serial.println();
   String message = String("");
    for (uint8_t i = 0; i < sizeof(serial); i += 1) {
     message = message + String(serial[i],16);
   }
   message = message + ":";
-  message = message + type;
-  message = message + value;
+  char temp[6];
+  dtostrf(humidity, 5,1,temp);
+  message = message + temp;
+  message = message + ":";
+  dtostrf(temperature, 5,1,temp);
+  message = message + temp;
   
   message.getBytes(buffer,sizeof(buffer));
 
