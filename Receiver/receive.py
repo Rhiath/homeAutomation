@@ -5,7 +5,7 @@ import datetime
 import sys
 from RF24 import *
 import RPi.GPIO as GPIO
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, Response
 from flask_restful import Api, Resource
 from json import dumps
 #from flask.ext.jsonpify import jsonify
@@ -15,6 +15,7 @@ from xml.dom.minidom import parse
 import xml.dom.minidom
 import sensors
 import building
+import jsonpickle
  
 # RPi Alternate, with SPIDEV - Note: Edit RF24/arch/BBB/spi.cpp and  set 'this->device = "/dev/spidev0.0";;' or as listed in /dev
 radio = RF24(22, 0);
@@ -27,9 +28,14 @@ lastMeasurement = {}
 app = Flask(__name__)
 api = Api(app)
 
-class Sensors(Resource):
+class Api(Resource):
     def get(self):
-        return lastMeasurement
+        document = xml.dom.minidom.parse("building.xml")
+        element = document.childNodes[0]
+
+        buildingObject = building.Building(element)
+
+	return Response(jsonpickle.encode(buildingObject, unpicklable=False), mimetype='application/json')
 
 class Status(Resource):
     @staticmethod
@@ -108,7 +114,7 @@ class Status(Resource):
 	retValue = retValue + "</body></html>"
 	return make_response(retValue, 200)
 
-api.add_resource(Sensors, '/sensors')
+api.add_resource(Api, '/api')
 api.add_resource(Status, '/status')
 
 radio.begin()
