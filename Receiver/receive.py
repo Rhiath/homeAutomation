@@ -212,7 +212,7 @@ def keepGrabbingCC2():
 			lastConnectionToCC2 = time.time()
 		except Exception as e:
 			print(e)
-		print("pulled data from CC2")
+		print(makePrettyTimestamp(time.time())+" pulled data from CC2")
 		time.sleep(5.0)
 
 def startRESTService():
