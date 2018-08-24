@@ -10,7 +10,7 @@ from flask_restful import Api, Resource
 from json import dumps
 #from flask.ext.jsonpify import jsonify
 import threading
-import urllib
+import urllib2
 from xml.dom.minidom import parse
 import xml.dom.minidom
 import sensors
@@ -171,8 +171,13 @@ def getDomainSensorValue(deviceType, sensorType, value):
 	return value;
 
 def grabCC2():
-	first = urllib.urlopen("http://homematic-cc2/config/xmlapi/devicelist.cgi").read()
-	second = urllib.urlopen("http://homematic-cc2/config/xmlapi/statelist.cgi").read()
+	try:
+		first = urllib2.urlopen("http://homematic-cc2/config/xmlapi/devicelist.cgi", timeout=5).read()
+		second = urllib2.urlopen("http://homematic-cc2/config/xmlapi/statelist.cgi", timeout=5).read()
+	except Exception as e:
+		print(e)
+		print("failed to pull data from homematic CC2")
+		return
 
 	devices = xml.dom.minidom.parseString(first)
 	states = xml.dom.minidom.parseString(second)
