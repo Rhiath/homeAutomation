@@ -24,6 +24,7 @@ pipes = [0x314e6f6465]
 payload_size = 32
 millis = lambda: int(round(time.time() * 1000))
 lastMeasurement = {}
+lastConnectionToCC2 = 0
 
 app = Flask(__name__)
 api = Api(app)
@@ -103,6 +104,7 @@ class Status(Resource):
 	
 
 	building = xml.dom.minidom.parse("building.xml")
+	retValue = "<b>last connection to CC2: "+makePrettyTimestamp(lastConnectionToCC2)+"</b>"
 	for floor in Status.getChildren(building.childNodes[0],"floor"):
 		retValue = retValue + "<h1>" + floor.getAttribute("name") + "</h1>"
 		for hallway in Status.getChildren(floor, "hallway"):
@@ -134,9 +136,12 @@ def getHumidity(message):
 def recordSensorMeasurement(nodeID, measurementType, measurementValue):
 	if not (nodeID in lastMeasurement):
 		lastMeasurement[nodeID] = {}
-	
-	formattedTimestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%dT%H:%M:%S')
+	formattedTimestamp = makePrettyTimestamp(time.time())
 	lastMeasurement[nodeID][measurementType] = (measurementValue, formattedTimestamp)
+
+def makePrettyTimestamp(timestamp):
+	retValue = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%S')
+	return retValue
 
 
 def handleMessage(message):
@@ -200,8 +205,13 @@ def grabCC2():
 		recordSensorMeasurement(deviceName,deviceType, values)
 
 def keepGrabbingCC2():
+	global lastConnectionToCC2
 	while(True):
-		grabCC2()
+		try:
+			grabCC2()
+			lastConnectionToCC2 = time.time()
+		except Exception as e:
+			print(e)
 		print("pulled data from CC2")
 		time.sleep(5.0)
 
