@@ -104,7 +104,7 @@ class Status(Resource):
 	
 
 	building = xml.dom.minidom.parse("building.xml")
-	retValue = "<b>last connection to CC2: "+makePrettyTimestamp(lastConnectionToCC2)+"</b>"
+	retValue = retValue + "<b>last connection to CC2: "+makePrettyTimestamp(lastConnectionToCC2)+"</b>"
 	for floor in Status.getChildren(building.childNodes[0],"floor"):
 		retValue = retValue + "<h1>" + floor.getAttribute("name") + "</h1>"
 		for hallway in Status.getChildren(floor, "hallway"):
