@@ -16,6 +16,7 @@ import xml.dom.minidom
 import sensors
 import building
 import jsonpickle
+import feeder
  
 # RPi Alternate, with SPIDEV - Note: Edit RF24/arch/BBB/spi.cpp and  set 'this->device = "/dev/spidev0.0";;' or as listed in /dev
 radio = RF24(22, 0);
@@ -29,14 +30,17 @@ lastConnectionToCC2 = 0
 app = Flask(__name__)
 api = Api(app)
 
-class Api(Resource):
-    def get(self):
-        document = xml.dom.minidom.parse("building.xml")
+def loadBuilding(fileName):
+        document = xml.dom.minidom.parse(fileName)
         element = document.childNodes[0]
 
-        buildingObject = building.Building(element)
+        return building.Building(element)
 
-	return Response(jsonpickle.encode(buildingObject, unpicklable=False), mimetype='application/json')
+theBuilding = loadBuilding("building.xml")
+
+class Api(Resource):
+    def get(self):
+	return Response(jsonpickle.encode(theBuilding, unpicklable=False), mimetype='application/json')
 
 class Status(Resource):
     @staticmethod
@@ -224,7 +228,7 @@ if __name__ == "__main__":
     thread.start()
     print("started REST service")
 
-    thread2 = threading.Thread(target=keepGrabbingCC2)
+    thread2 = threading.Thread(target=feeder.keepFeedingFromCC2(theBuilding, 5.0, "homematic-cc2"))
     thread2.daemon = True
     thread2.start()
     print("started CC2 grabber")

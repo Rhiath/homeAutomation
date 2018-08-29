@@ -23,6 +23,9 @@ class Floor:
 class Room:
 	def __init__(self, element):
 		self.name = element.getAttribute("name")
+		self.sensors = []
+	        for sensor in getChildren(element,"sensor"):
+        	        self.sensors.append(Sensor(sensor))
 		self.windows = []
 	        for window in getChildren(element,"window"):
         	        self.windows.append(Window(window))
@@ -64,6 +67,11 @@ class Sensor:
 
 	def __init__(self, element):
 		self.name = element.getAttribute("name")
+
+	def set(self, type, values, timestamp):
+		self.setType(type)
+		self.setValues(values)
+		self.setLastMeasurement(timestamp)
 
 	def setType(self, type):
 		self.type = type
