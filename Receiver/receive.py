@@ -102,46 +102,6 @@ def getDomainSensorValue(deviceType, sensorType, value):
 
 	return value;
 
-def grabCC2():
-	try:
-		first = urllib2.urlopen("http://homematic-cc2/config/xmlapi/devicelist.cgi", timeout=5).read()
-		second = urllib2.urlopen("http://homematic-cc2/config/xmlapi/statelist.cgi", timeout=5).read()
-	except Exception as e:
-		print(e)
-		print("failed to pull data from homematic CC2")
-		return
-
-	devices = xml.dom.minidom.parseString(first)
-	states = xml.dom.minidom.parseString(second)
-
-#	print(devices)
-#	print(states)	
-	for device in states.childNodes[0].childNodes:
-		deviceName = device.getAttribute("name")
-		deviceType = getDeviceType(devices, deviceName)
-		values = {}
-
-		for channel in device.childNodes:
-			for datapoint in channel.childNodes:
-				type = datapoint.getAttribute("type")
-				value = datapoint.getAttribute("value")
-				value = getDomainSensorValue(deviceType, type, value)
-
-				values[type] = value
-
-		recordSensorMeasurement(deviceName,deviceType, values)
-
-def keepGrabbingCC2():
-	global lastConnectionToCC2
-	while(True):
-		try:
-			grabCC2()
-			lastConnectionToCC2 = time.time()
-		except Exception as e:
-			print(e)
-		print(makePrettyTimestamp(time.time())+" pulled data from CC2")
-		time.sleep(5.0)
-
 def startRESTService():
     app.run(port='5002', host= '0.0.0.0')
  
