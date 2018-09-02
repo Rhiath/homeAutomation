@@ -17,6 +17,7 @@ import sensors
 import building
 import jsonpickle
 import feeder
+import htmlRenderer
  
 # RPi Alternate, with SPIDEV - Note: Edit RF24/arch/BBB/spi.cpp and  set 'this->device = "/dev/spidev0.0";;' or as listed in /dev
 radio = RF24(22, 0);
@@ -42,86 +43,8 @@ class Api(Resource):
     def get(self):
 	return Response(jsonpickle.encode(theBuilding, unpicklable=False), mimetype='application/json')
 
-class Status(Resource):
-    @staticmethod
-    def getChildren(element, name):
-	retValue = []
-	for child in element.childNodes:
-		if ( child.nodeName == name ):
-			retValue.append(child)
-	return retValue
-
-    @staticmethod
-    def renderSensors(element):
-	retValue = "";
-	values = []
-	for sensor in Status.getChildren(element, "sensor"):
-		name = sensor.getAttribute("name")
-		value = Status.renderSensorValue(sensor)
-		sens = sensors.Sensor(value)
-		values.append(sens)
-	multi = sensors.MultiSensor(values)
-	return multi.toHTML()
-
-    @staticmethod
-    def renderSensorValue(element):
-	name = element.getAttribute("name")
-	retValue = "unknown"
-	if ( name in lastMeasurement):
-		sensor = lastMeasurement[name]
-		sensorType = next(iter(sensor))
-		retValue = sensor[sensorType][0]["STATE"]
-
-	if ( retValue == "OPEN" or retValue == "UNLOCK" ):
-		retValue = "<font color=\"red\">"+retValue+"</font>"
-
-	if ( retValue == "TILT" ):
-		retValue = "<font color=\"GoldenRod\">"+retValue+"</font>"
-
-	if ( retValue == "CLOSED" or retValue == "LOCK" ):
-		retValue = "<font color=\"green\">"+retValue+"</font>"
-
-	return retValue;
-
-    @staticmethod
-    def renderRoom(room):
-	retValue = "";
-	retValue = retValue + "<h2>" + room.getAttribute("name") + "</h2>"
-	retValue = retValue + Status.renderSensors(room)
-	for door in Status.getChildren(room, "door"):
-		retValue = retValue + Status.renderDoor(door)
-	for window in Status.getChildren(room, "window"):
-		retValue = retValue + Status.renderWindow(window)
-	return retValue
-
-    @staticmethod
-    def renderDoor(element):
-	return "<b>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</b><br />"
-
-    @staticmethod
-    def renderWindow(element):
-	return "<b>"+element.getAttribute("name")+" [" + Status.renderSensors(element)+"]</b><br />"
-
-
-    def get(self):
-        retValue = "<html><head><meta http-equiv=\"refresh\" content=\"5\"></head><body>"
-	
-
-	building = xml.dom.minidom.parse("building.xml")
-	retValue = retValue + "<b>last connection to CC2: "+makePrettyTimestamp(lastConnectionToCC2)+"</b>"
-	for floor in Status.getChildren(building.childNodes[0],"floor"):
-		retValue = retValue + "<h1>" + floor.getAttribute("name") + "</h1>"
-		for hallway in Status.getChildren(floor, "hallway"):
-			for door in Status.getChildren(hallway, "door"):
-				retValue = retValue + Status.renderDoor(door)
-		for room in Status.getChildren(floor, "room"):
-			retValue = retValue + Status.renderRoom(room)
-
-	retValue = retValue + "</body></html>"
-	return make_response(retValue, 200)
-
 api.add_resource(Api, '/api')
-api.add_resource(Status, '/status')
+api.add_resource(htmlRenderer.Renderer, '/status', resource_class_kwargs={"theBuilding": theBuilding})
 
 radio.begin()
  
