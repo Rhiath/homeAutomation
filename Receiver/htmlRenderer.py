@@ -81,7 +81,7 @@ class Renderer(Resource):
 		retValue = element.values["UNREACH"]
 
 	if ( retValue == "true" ):
-		retValue = "<font color=\"GoldenRod\">UNREACHABLE</font>"
+		retValue = "<font color=\"red\">UNREACHABLE</font>"
 	if ( retValue == "false" ):
 		retValue = ""
 
