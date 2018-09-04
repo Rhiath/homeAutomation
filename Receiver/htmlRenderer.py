@@ -78,7 +78,7 @@ class Renderer(Resource):
 
 	if ( hasattr(element, "type") and hasattr(element, "values") and hasattr(element, "lastMeasurement")):
 		sensorType = element.type
-		retValue = element.values["STICKY_UNREACH"]
+		retValue = element.values["UNREACH"]
 
 	if ( retValue == "true" ):
 		retValue = "<font color=\"GoldenRod\">UNREACHABLE</font>"
