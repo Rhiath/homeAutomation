@@ -65,8 +65,13 @@ def feedFromCC2(sensors, hostAndPort):
                 print("failed to pull data from homematic CC2")
                 return
 
-        devices = xml.dom.minidom.parseString(first)
-        states = xml.dom.minidom.parseString(second)
+	try:
+	        devices = xml.dom.minidom.parseString(first)
+        	states = xml.dom.minidom.parseString(second)
+        except Exception as e:
+                print(e)
+                print("failed to pull data from homematic CC2")
+                return
 
 #       print(devices)
 #       print(states)
