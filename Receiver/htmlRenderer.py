@@ -33,6 +33,8 @@ class Renderer(Resource):
 		value = self.renderSensorValue(sensor)
 		sens = sensors.Sensor(value)
 		values.append(sens)
+		values.append(sensors.Sensor(self.renderBatteryStatus(sensor)))
+		values.append(sensors.Sensor(self.renderStickyDisconnect(sensor)))
 	multi = sensors.MultiSensor(values)
 	return multi.toHTML()
 
@@ -54,6 +56,37 @@ class Renderer(Resource):
 		retValue = "<font color=\"green\">"+retValue+"</font>"
 
 	return retValue;
+
+    def renderBatteryStatus(self, element):
+	name = element.name
+	retValue = ""
+
+	if ( hasattr(element, "type") and hasattr(element, "values") and hasattr(element, "lastMeasurement")):
+		sensorType = element.type
+		retValue = element.values["LOWBAT"]
+
+	if ( retValue == "true" ):
+		retValue = "<font color=\"red\">LOW BATTERY</font>"
+	if ( retValue == "false" ):
+		retValue = ""
+
+	return retValue;
+
+    def renderStickyDisconnect(self, element):
+	name = element.name
+	retValue = ""
+
+	if ( hasattr(element, "type") and hasattr(element, "values") and hasattr(element, "lastMeasurement")):
+		sensorType = element.type
+		retValue = element.values["STICKY_UNREACH"]
+
+	if ( retValue == "true" ):
+		retValue = "<font color=\"GoldenRod\">UNREACHABLE</font>"
+	if ( retValue == "false" ):
+		retValue = ""
+
+	return retValue;
+
 
     def renderRoom(self, room):
 	retValue = "";

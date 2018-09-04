@@ -13,6 +13,7 @@ class MultiSensor(Sensor):
 		for sensor in values:
 			text = sensor.toHTML()
 			t.append(text)
+		t = filter(None, t)
 		aggregatedSensors = list(OrderedDict.fromkeys(t))
 		Sensor.__init__(self, ", ".join(aggregatedSensors))
 
