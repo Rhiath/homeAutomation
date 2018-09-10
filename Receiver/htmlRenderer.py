@@ -33,6 +33,7 @@ class Renderer(Resource):
 		value = self.renderSensorValue(sensor)
 		sens = sensors.Sensor(value)
 		values.append(sens)
+
 		values.append(sensors.Sensor(self.renderBatteryStatus(sensor)))
 		values.append(sensors.Sensor(self.renderStickyDisconnect(sensor)))
 	multi = sensors.MultiSensor(values)
@@ -44,7 +45,11 @@ class Renderer(Resource):
 
 	if ( hasattr(element, "type") and hasattr(element, "values") and hasattr(element, "lastMeasurement")):
 		sensorType = element.type
-		retValue = element.values["STATE"]
+		
+		if (sensorType == "DHT22"):
+			retValue = ""+element.values["H"]+"% RH  "+element.values["T"]+" C"
+		else:
+			retValue = element.values["STATE"]
 
 	if ( retValue == "OPEN" or retValue == "UNLOCK" ):
 		retValue = "<font color=\"red\">"+retValue+"</font>"
@@ -63,7 +68,8 @@ class Renderer(Resource):
 
 	if ( hasattr(element, "type") and hasattr(element, "values") and hasattr(element, "lastMeasurement")):
 		sensorType = element.type
-		retValue = element.values["LOWBAT"]
+		if (sensorType != "DHT22"):
+			retValue = element.values["LOWBAT"]
 
 	if ( retValue == "true" ):
 		retValue = "<font color=\"red\">LOW BATTERY</font>"
@@ -78,7 +84,8 @@ class Renderer(Resource):
 
 	if ( hasattr(element, "type") and hasattr(element, "values") and hasattr(element, "lastMeasurement")):
 		sensorType = element.type
-		retValue = element.values["UNREACH"]
+		if (sensorType != "DHT22"):
+			retValue = element.values["UNREACH"]
 
 	if ( retValue == "true" ):
 		retValue = "<font color=\"red\">UNREACHABLE</font>"
@@ -91,7 +98,9 @@ class Renderer(Resource):
     def renderRoom(self, room):
 	retValue = "";
 	retValue = retValue + "<h2>" + room.name + "</h2>"
-	retValue = retValue + self.renderSensors(room)
+
+	if ( room.sensors ):
+		retValue = retValue + self.renderSensors(room) + "<br />"
 	for door in room.doors:
 		retValue = retValue + self.renderDoor(door)
 	for window in room.windows:
