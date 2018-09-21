@@ -27,7 +27,7 @@ def recordSensorMeasurement(nodeID, measurementType, measurementValue):
         if not (nodeID in lastMeasurement):
                 lastMeasurement[nodeID] = {}
         formattedTimestamp = makePrettyTimestamp(time.time())
-        lastMeasurement[nodeID][measurementType] = (measurementValue, formattedTimestamp)
+      	lastMeasurement[nodeID][measurementType] = (measurementValue, formattedTimestamp)
 
 def makePrettyTimestamp(timestamp):
         retValue = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%S')
@@ -42,9 +42,12 @@ def handleMessage(message, sensors):
         values = {}
         values["T"] = temperature
         values["H"] = humidity
-        print(nodeID +"(DHT22) --> "+ json.dumps(values))
 
-	sensors[nodeID].set("DHT22", values, now())
+	if ( nodeID in sensors ):
+	        print("applied: "+nodeID +"(DHT22) --> "+ json.dumps(values))
+		sensors[nodeID].set("DHT22", values, now())
+	else:
+	        print("discarded (sensor not in sensor map): "+nodeID +"(DHT22) --> "+ json.dumps(values)+" @ "+ now())
 
 def now():
         return makePrettyTimestamp(time.time())
