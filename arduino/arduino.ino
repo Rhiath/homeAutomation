@@ -11,6 +11,7 @@
 #include <printf.h>
 #define SIGRD 5
 #include <avr/boot.h>
+#include "LowPower.h"
 
 
 RF24 radio (9,10);
@@ -56,18 +57,11 @@ void setup(){
 unsigned int lastEmit = 0;
 
 void loop() {
-  unsigned int now = millis();
-  if( now - lastEmit > 5000){
-    emitMessage();
-    lastEmit = now;
+  delay(2000);
+  emitMessage();
+  for (int x = 0; x < 8; x++) {
+    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
   }
-  if ( lastEmit > millis()) { 
-   emitMessage();
-    lastEmit = now;
-  }
-  //Serial.println(String("now: ")+now+" lastEmit: "+lastEmit);
-  
-  receiveMessages();
 }
 
 void receiveMessages(){
