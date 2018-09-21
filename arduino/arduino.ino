@@ -20,8 +20,13 @@ DHT dht(2, DHT22);
 
 uint64_t addresses[]= {0x314e6f6465};
 int nodeID;
+#define DHT_GND 3
 
 void setup(){
+  pinMode(DHT_GND, OUTPUT); 
+  digitalWrite(DHT_GND, LOW);
+
+   
   radio.begin();
   radio.setPALevel(RF24_PA_MAX); 
   radio.openWritingPipe(addresses[0]);
