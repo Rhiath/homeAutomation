@@ -45,38 +45,76 @@ void setup() {
   radio.setPALevel(RF24_PA_MAX);
   Serial.println(" +--> opening writing pipe"); delay(100);
   radio.openWritingPipe(addresses[0]);
-    Serial.println(" +--> opening reading pipe"); delay(100);
+//    Serial.println(" +--> opening reading pipe"); delay(100);
   // radio.openReadingPipe(1, addresses[0]);
+  Serial.println(" +--> sending device to low power mode"); delay(100);
+  radio.powerDown();
   Serial.println("completed RF24 power up"); delay(100);
   delay(100);
+  Serial.println("granting DHT sensor 2 sec for operations"); delay(100);
+  delay(2000);
+  Serial.println(" +--> done"); delay(100);
 }
 
 unsigned int lastEmit = 0;
 
 void loop() {
-  delay(2000);
+
+ // printCurrentTime();
 
   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
   emitMessage();
   digitalWrite(LED_BUILTIN, LOW);
 
-  //  for (int x = 0; x < 1; x++) {
-  //    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-  //  }
+ Serial.println("entering low power mode");delay(100);
+    for (int x = 0; x < 8; x++) {
+      LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+    }
+ Serial.println("entering normal power mode");delay(100);
+}
+
+void printCurrentTime() {
+  unsigned long currentTime = millis();
+
+  unsigned long milliseconds = currentTime;
+  unsigned seconds = milliseconds / 1000;
+  unsigned minutes = seconds / 60;
+  unsigned hours = minutes / 60;
+
+  milliseconds = milliseconds % 1000;
+  seconds = seconds % 60;
+  minutes = minutes % 60;
+
+  Serial.print("current time (value might overflow): ");
+  Serial.print(hours);
+  Serial.print("h ");
+  Serial.print(minutes);
+  Serial.print("m ");
+  Serial.print(seconds);
+  Serial.print("s ");
+  Serial.print(milliseconds);
+  Serial.print("ms");
+  Serial.println();
+  delay(100);
 }
 
 void emitMessage() {
+  Serial.println("emitting message"); delay(100);
 
+  radio.powerUp();
+//  delay(1000);
   float hum = dht.readHumidity();
   float temp = dht.readTemperature();
-  Serial.print(temp); Serial.println(" C");
-  Serial.print(hum); Serial.println("% RH");
+  Serial.print(" +--> ");Serial.print(temp); Serial.println(" C");
+  Serial.print(" +--> ");Serial.print(hum); Serial.println("% RH");
 
   emit(hum, temp);
+  radio.powerDown();
+  Serial.println(" +--> done"); delay(100);
+
 }
 
 void emit(float humidity, float temperature) {
-  Serial.println();
   String message = String("");
   for (uint8_t i = 0; i < sizeof(serial); i += 1) {
     message = message + String(serial[i], 16);
@@ -91,9 +129,9 @@ void emit(float humidity, float temperature) {
 
   message.getBytes(buffer, sizeof(buffer));
 
-  Serial.println("sending: " + message + " (" + message.length() + " bytes)");
+  Serial.print(" +--> ");Serial.println("sending: " + message + " (" + message.length() + " bytes)");
   radio.write(&buffer, message.length());
-  Serial.println("completed send");
+  Serial.print(" +--> ");Serial.println("completed send");
 }
 
 
