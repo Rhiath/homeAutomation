@@ -45,8 +45,10 @@ class Renderer(Resource):
 
 	if ( hasattr(element, "type") and hasattr(element, "values") and hasattr(element, "lastMeasurement")):
 		sensorType = element.type
-		
-		if (sensorType == "DHT22"):
+
+		if (sensorType == "HM-CC-RT-DN"):
+			retValue = ""+element.values["ACTUAL_TEMPERATURE"]+" C (target: "+element.values["SET_TEMPERATURE"]+" C)"
+		elif (sensorType == "DHT22"):
 			retValue = ""+element.values["H"]+"% RH  "+element.values["T"]+" C"
 		else:
 			retValue = element.values["STATE"]

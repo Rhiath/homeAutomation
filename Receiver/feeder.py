@@ -43,7 +43,7 @@ def buildSensorMap(theBuilding):
 	return retValue
 
 def getDomainSensorValue(deviceType, sensorType, value):
-        if (deviceType == "HM-Sec-SC-2" and sensorType == "STATE"):
+	if (deviceType == "HM-Sec-SC-2" and sensorType == "STATE"):
                 if ( value == "true"): value = "OPEN"
                 if ( value == "false"): value = "CLOSED"
 
