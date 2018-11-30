@@ -44,7 +44,7 @@ def handleMessage(message, sensors):
         values["H"] = humidity
 
 	if ( nodeID in sensors ):
-	        print("applied: "+nodeID +"(DHT22) --> "+ json.dumps(values))
+	        print("applied@"+now()+":  "+nodeID +"(DHT22) --> "+ json.dumps(values))
 		sensors[nodeID].set("DHT22", values, now())
 	else:
 	        print("discarded (sensor not in sensor map): "+nodeID +"(DHT22) --> "+ json.dumps(values)+" @ "+ now())
